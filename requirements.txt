@@ -4,7 +4,9 @@ langchain-community>=0.0.20
 sentence-transformers>=2.2.0
 
 # Vector Database and Search
-faiss-cpu>=1.7.0
+faiss-cpu>=1.7.0  # Legacy support
+qdrant-client>=1.7.0
+langchain-qdrant>=0.1.0
 
 # Document Loaders
 pypdf>=3.0.0

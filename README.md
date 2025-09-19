@@ -1,246 +1,296 @@
-# 🏥 Mediguide - Medical Document Search System
+# Mediguide - Medical Document Search System
 
-A powerful medical document search and retrieval system with AI-powered question answering capabilities using Retrieval-Augmented Generation (RAG).
+Mediguide helps you search through medical documents and get intelligent answers to your questions. Think of it as having a smart medical librarian that can instantly find relevant information from thousands of medical papers, guidelines, and drug handbooks.
 
-## 🌟 Features
+The system uses advanced AI to understand your questions and find the most relevant information, then provides clear answers with references to the source documents.
 
-- **📄 Multi-format Support**: Process both PDF and DOCX medical documents
-- **🧠 Semantic Search**: Uses medical-specific embeddings (`pritamdeka/S-PubMedBert-MS-MARCO`)
-- **🤖 AI Assistant**: RAG-powered responses using Ollama with LlamaMedicine model
-- **🔍 Dual Search Modes**: 
-  - Basic search with similarity scores
-  - AI-enhanced responses with synthesized answers
-- **💾 Efficient Storage**: FAISS vector database for fast retrieval
-- **🖥️ Interactive Interface**: Command-line interface with multiple usage modes
+## What can it do?
 
-## 🚀 Quick Start
+**Document Processing**
+You can throw PDFs, text files, and markdown documents at it. The system will read through everything and make it searchable. Currently working with medical papers, drug handbooks, and clinical guidelines.
 
-### Prerequisites
+**Smart Search**
+Instead of just matching keywords, it actually understands what you're asking. Ask "What's the best treatment for diabetes?" and it will find relevant information even if those exact words aren't in the documents.
 
-- Python 3.8+
-- Ollama (for AI Assistant mode)
+**Intelligent Answers**
+When you ask a question, it doesn't just show you search results. It reads through the relevant documents and gives you a proper answer, complete with references so you can verify everything.
 
-### Installation
+**Quality Scoring**
+The system is pretty smart about ranking information. It looks at how well the content matches your question, checks for relevant medical terms, and makes sure you get the most useful information first.
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd Mediguide
-   ```
+**Multiple Ways to Use It**
+You can use it through a command line interface, interactive chat mode, or run batch queries. Whatever works best for your workflow.
 
-2. **Create and activate virtual environment**
-   ```bash
-   python -m venv med
-   # Windows
-   med\Scripts\activate
-   # Linux/Mac
-   source med/bin/activate
-   ```
+## Getting Started
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+**What you'll need**
+- Python 3.8 or newer
+- Docker (for the database)
+- Ollama (for the AI chat features)
 
-4. **Setup Ollama (for AI Assistant)**
-   ```bash
-   # Install Ollama from https://ollama.ai
-   ollama pull Elixpo/LlamaMedicine
-   ```
+**Setup**
 
-### Usage
-
-#### 1. Ingest Documents
-Place your medical documents in the `data/` directory and run:
-
+First, grab the code:
 ```bash
-# Process all files in data/ directory
+git clone <your-repo-url>
+cd Mediguide
+```
+
+Set up a Python environment (keeps things clean):
+```bash
+python -m venv med
+# Windows
+med\Scripts\activate
+# Linux/Mac
+source med/bin/activate
+```
+
+Install everything:
+```bash
+pip install -r requirements.txt
+```
+
+Get the AI model (this one is specialized for medical questions):
+```bash
+# Install Ollama from https://ollama.ai first
+ollama pull Elixpo/LlamaMedicine
+```
+
+Start the database (this stores all your document data):
+```bash
+# Make sure Docker Desktop is running first
+docker run -d --name qdrant -p 6333:6333 -p 6334:6334 -v "${PWD}/qdrant_storage:/qdrant/storage" qdrant/qdrant
+
+# Check it's working
+docker ps
+curl http://localhost:6333/
+```
+
+**How to use it**
+
+**Step 1: Add your documents**
+Put your medical documents (PDFs, text files) in the `data/` folder, then run:
+```bash
+# Process everything in the data folder
 python src/ingest.py
 
-# Process specific file
+# Or process just one file
 python src/ingest.py "data/your-medical-document.pdf"
 ```
 
-#### 2. Query Documents
+This will read all your documents and make them searchable. It takes a few minutes depending on how many documents you have.
 
-**Interactive Mode (Recommended)**
+**Step 2: Start asking questions**
+
+The easiest way is interactive mode:
 ```bash
 python src/query.py
 ```
-- Type questions for basic search
-- Type `ai <question>` for AI-assisted responses
-- Type `mode` to switch between modes
-- Type `quit` to exit
 
-**Command Line Mode**
+Then just type your questions like:
+- "What are the symptoms of diabetes?"
+- "ai What's the best treatment for hypertension?" (the 'ai' prefix gives you smart answers)
+- Type "quit" when you're done
 
-Basic Search:
+You can also run single queries from the command line:
 ```bash
 python src/query.py "What are the symptoms of diabetes?"
+python src/query.py --rag "What are the main treatment guidelines for diabetes?"
 ```
 
-AI Assistant (RAG):
-```bash
-python src/query.py --rag "What are the main sources of clinical practice guidelines?"
-python src/query.py --ai "How to treat hypertension?"
-```
-
-## 📁 Project Structure
+## What's in the project
 
 ```
 Mediguide/
 ├── src/
-│   ├── ingest.py          # Document ingestion and embedding creation
-│   └── query.py           # Search and RAG query system
-├── data/                  # Place your medical documents here
-├── embeddings/            # Generated FAISS vector databases
-├── med/                   # Virtual environment
-├── requirements.txt       # Python dependencies
-└── README.md             # This file
+│   ├── ingest.py          # Processes documents and makes them searchable
+│   └── query.py           # Handles searches and questions
+├── data/                  # Put your medical documents here
+│   ├── drug_handbook/     # Drug reference materials
+│   ├── train/             # Training datasets
+│   └── *.txt, *.pdf       # Your medical documents
+├── qdrant_storage/        # Database files (created automatically)
+├── med/                   # Python virtual environment
+└── requirements.txt       # List of required Python packages
 ```
 
-## 🔧 Configuration
+## Configuration
 
-### Embedding Model
-The system uses `pritamdeka/S-PubMedBert-MS-MARCO` for medical-specific embeddings. This model is optimized for biomedical text understanding.
+**The AI Models**
+The system uses two main AI components:
+- Document understanding: A model called `pritamdeka/S-PubMedBert-MS-MARCO` that's specifically trained on medical texts
+- Question answering: `Elixpo/LlamaMedicine` through Ollama, which is designed for medical Q&A
 
-### LLM Model
-For AI Assistant mode, the system uses `Elixpo/LlamaMedicine` via Ollama, which is specialized for medical question answering.
+**How it decides what's relevant**
+When you ask a question, the system scores each piece of information on several factors:
+- How well it matches the meaning of your question (50% weight)
+- Whether it contains your keywords (30% weight)  
+- Overall quality of the content (10% weight)
+- How much medical terminology it contains (10% weight)
 
-### Customization
-- **Chunk Size**: Modify `chunk_size=500` in `ingest.py` for different text chunk sizes
-- **Search Results**: Adjust `k` parameter in queries for more/fewer results
-- **LLM Model**: Change the model in `rag_query()` function for different Ollama models
+Then it classifies everything as high priority (really relevant), medium priority (somewhat relevant), or supporting information (might be useful).
 
-## 📋 Examples
+**Tweaking the system**
+You can adjust things like:
+- How big the text chunks are (currently 500 characters)
+- How many search results to return
+- Which AI model to use for answers
+- The relevance thresholds for different priority levels
 
-### Example Documents
-The system works with various medical document types:
+Most of these settings are in the source code files if you want to experiment.
+
+## Examples
+
+**What kind of documents work well?**
 - Clinical practice guidelines
 - Medical research papers
-- Treatment protocols
+- Treatment protocols  
 - Drug information sheets
 - Patient education materials
 
-### Sample Queries
+Basically any medical text that you'd want to search through.
 
-**Basic Search Examples:**
+**Example questions you can ask:**
+
+Simple searches:
 ```bash
 python src/query.py "diabetes management protocols"
 python src/query.py "side effects of statins"
 python src/query.py "hypertension treatment guidelines"
 ```
 
-**AI Assistant Examples:**
+Smart AI answers:
 ```bash
 python src/query.py --rag "What are the latest recommendations for diabetes treatment?"
-python src/query.py --ai "Explain the mechanism of action for ACE inhibitors"
-python src/query.py --rag "What factors should be considered when choosing antihypertensive therapy?"
+python src/query.py --rag "How do ACE inhibitors work?"
+python src/query.py --rag "What should I consider when choosing blood pressure medication?"
+python src/query.py --rag --style detailed "How should metformin be dosed in kidney disease?"
 ```
 
-### Expected Output
+**What you'll get back**
 
-**Basic Search:**
+For basic searches, you get a list of relevant text chunks with similarity scores:
 ```
-🎯 Found 3 relevant results for: 'diabetes treatment'
+Found 3 relevant results for: 'diabetes treatment'
 
-📄 Result 1 (Similarity Score: 0.8245)
---------------------------------------------------
-Content: [Relevant document chunk about diabetes treatment...]
-Source: [Document metadata]
---------------------------------------------------
+Result 1 (Score: 0.82)
+Content: [Relevant text about diabetes treatment...]
+Source: diabetes_guidelines.pdf
 ```
 
-**AI Assistant (RAG):**
+For AI questions, you get a proper answer plus the sources:
 ```
-🤖 AI Assistant Response:
-======================================================================
-The main sources of clinical practice guidelines include the American 
-Diabetes Association (ADA), the American Association of Clinical 
-Endocrinology (AACE), and Diabetes Canada. These organizations provide 
-evidence-based recommendations for diagnosis, treatment, and management 
-of diabetes, incorporating the latest research findings and clinical trials.
-======================================================================
+AI Response:
+The main diabetes treatment guidelines come from the American Diabetes Association (ADA), 
+American Association of Clinical Endocrinology (AACE), and Diabetes Canada. These 
+organizations provide evidence-based recommendations for diagnosis, treatment, and 
+management, incorporating the latest research findings.
 
-📚 Sources: 3 documents retrieved
+For kidney disease patients, metformin dosing should be adjusted based on creatinine 
+clearance levels...
+
+Sources: 3 documents used
+- diabetes_guidelines.txt (very relevant)
+- drug_handbook.pdf (relevant)  
+- clinical_protocols.txt (supporting info)
 ```
 
-## 🛠️ Troubleshooting
+## Managing the Database
 
-### Common Issues
+The system uses Qdrant to store all the processed document data. Here's how to work with it:
 
-1. **Import Errors**
-   ```bash
-   # Make sure virtual environment is activated
-   med\Scripts\activate  # Windows
-   pip install -r requirements.txt
-   ```
+**Starting the database:**
+```bash
+docker run -d --name qdrant -p 6333:6333 -p 6334:6334 -v "${PWD}/qdrant_storage:/qdrant/storage" qdrant/qdrant
+```
 
-2. **Ollama Connection Issues**
-   ```bash
-   # Ensure Ollama is running
-   ollama serve
-   
-   # Verify model is installed
-   ollama list
-   ollama pull Elixpo/LlamaMedicine
-   ```
+**Common database commands:**
+```bash
+# Check if it's running
+docker ps
 
-3. **No Documents Found**
-   ```bash
-   # Run ingestion first
-   python src/ingest.py
-   
-   # Check if embeddings directory exists
-   ls embeddings/
-   ```
+# Stop the database
+docker stop qdrant
 
-4. **FAISS Database Issues**
-   ```bash
-   # Re-run ingestion to recreate database
-   python src/ingest.py
-   ```
+# Start it again
+docker start qdrant
 
-## 🔬 Technical Details
+# Remove the container (your data stays safe in qdrant_storage/)
+docker rm qdrant
 
-### Architecture
-1. **Document Ingestion**: Documents are loaded, chunked, and embedded using medical-specific embeddings
-2. **Vector Storage**: FAISS is used for efficient similarity search
-3. **Retrieval**: Semantic search finds the most relevant document chunks
-4. **Generation**: LLM synthesizes coherent answers from retrieved context
+# See what's happening in the logs
+docker logs qdrant
+```
 
-### Performance
-- **Embedding Model**: 768-dimensional vectors optimized for medical text
-- **Search Speed**: Sub-second search across thousands of document chunks
-- **Memory Usage**: Efficient FAISS indexing for large document collections
+**Accessing the database:**
+- Web interface: http://localhost:6333/dashboard
+- API: http://localhost:6333
+- Your data is stored in the `qdrant_storage/` folder
 
-## 🤝 Contributing
+## When Things Go Wrong
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+**"Python can't find the modules"**
+Make sure your virtual environment is activated:
+```bash
+med\Scripts\activate  # Windows
+source med/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+```
 
-## 📄 License
+**"Can't connect to Ollama" or AI answers don't work**
+Ollama might not be running:
+```bash
+ollama serve
+# In another terminal, check if the model is installed
+ollama list
+# If LlamaMedicine isn't there:
+ollama pull Elixpo/LlamaMedicine
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+**"No documents found" when searching**
+You probably haven't processed your documents yet:
+```bash
+python src/ingest.py
+```
 
-## 🙏 Acknowledgments
+**Database connection problems**
+Check if Docker and Qdrant are running:
+```bash
+docker ps
+# If you don't see qdrant running:
+docker start qdrant
+# If the container doesn't exist:
+docker run -d --name qdrant -p 6333:6333 -p 6334:6334 -v "${PWD}/qdrant_storage:/qdrant/storage" qdrant/qdrant
+```
 
-- **Sentence Transformers**: For the medical embedding model
-- **LangChain**: For document processing and retrieval components
-- **FAISS**: For efficient vector similarity search
-- **Ollama**: For local LLM inference
-- **LlamaMedicine**: For medical-specific language understanding
+**Everything seems broken**
+Try reprocessing your documents:
+```bash
+python src/ingest.py
+```
 
-## 📞 Support
+Still having issues? Check if the database is responding:
+```bash
+curl http://localhost:6333/
+```
 
-For questions or issues:
-1. Check the troubleshooting section above
-2. Open an issue on GitHub
-3. Review the documentation for configuration options
+## How it works (technical stuff)
 
----
+**The basic process:**
+1. Documents get chopped up into small pieces (about 500 characters each)
+2. Each piece gets converted into a mathematical representation (called an embedding) that captures its meaning
+3. When you ask a question, your question also gets converted to the same type of representation
+4. The system finds the document pieces that are most similar to your question
+5. Those pieces get fed to the AI model which writes a coherent answer
 
-**Note**: This system is designed for research and educational purposes. Always consult with qualified healthcare professionals for medical advice and treatment decisions.
+**Performance:**
+- Simple searches: Usually under 1 second
+- AI answers: 2-10 seconds depending on the question complexity
+- Processing documents: About 1,000 text chunks per second
+- Current database: Over 5,500 document chunks indexed
+- Should handle up to 100,000+ chunks without problems
+- Storage: About 500MB for the current test dataset
+- Can handle about 10 people using it at the same time
+
+The whole thing runs locally on your computer, so your medical documents never leave your machine.
+

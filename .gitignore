@@ -72,3 +72,6 @@ models/
 # *.pdf
 # *.docx
 # *.txt
+output/
+
+qdrant_storage/
